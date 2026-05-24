@@ -1,0 +1,39 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/apache/Dockerfile
+    container_name: link_shortener_api
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - link_shortener_network
+
+  db:
+    image: postgres:16
+    container_name: link_shortener_db
+    restart: always
+    environment:
+      POSTGRES_DB: link_shortener_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - link_shortener_network
+
+volumes:
+  postgres_data:
+
+networks:
+  link_shortener_network:
+    driver: bridge
