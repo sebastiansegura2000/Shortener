@@ -8,5 +8,3 @@ Thumbs.db
 *.log
 
 postgres_data/
-
-config.php
