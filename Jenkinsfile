@@ -7,8 +7,9 @@ pipeline {
     }
 
     environment {
-        COMPOSE_PROJECT_NAME = 'shortener_ci'
         HEALTH_URL = 'http://host.docker.internal:8080/health'
+        COMPOSE_FILE_CI = 'docker-compose.ci.yml'
+        COMPOSE_PROJECT = 'shortener_ci'
     }
 
     stages {
@@ -45,7 +46,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
-                    docker compose -p shortener_ci build
+                    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" build --no-cache
                 '''
             }
         }
@@ -53,9 +54,9 @@ pipeline {
         stage('Docker Deploy') {
             steps {
                 sh '''
-                    docker compose -p shortener_ci down || true
-                    docker compose -p shortener_ci up -d
-                    docker compose -p shortener_ci ps
+                    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" down -v || true
+                    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" up -d
+                    docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" ps
                 '''
             }
         }
@@ -98,9 +99,9 @@ pipeline {
 
         failure {
             echo 'FAILED: El pipeline falló. Mostrando estado de contenedores...'
-            sh 'docker compose -p shortener_ci ps || true'
-            sh 'docker compose -p shortener_ci logs api --tail=80 || true'
-            sh 'docker compose -p shortener_ci logs db --tail=80 || true'
+            sh 'docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" ps || true'
+            sh 'docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" logs api --tail=80 || true'
+            sh 'docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE_CI" logs db --tail=80 || true'
         }
     }
 }

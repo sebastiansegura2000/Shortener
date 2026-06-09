@@ -5,8 +5,6 @@ services:
       dockerfile: docker/apache/Dockerfile
     ports:
       - "8080:80"
-    volumes:
-      - .:/var/www/html
     env_file:
       - .env
     depends_on:
@@ -15,7 +13,9 @@ services:
       - link_shortener_network
 
   db:
-    image: postgres:16
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
     restart: always
     environment:
       POSTGRES_DB: link_shortener_db
@@ -25,7 +25,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - link_shortener_network
 
