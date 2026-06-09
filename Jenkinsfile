@@ -3,9 +3,11 @@ pipeline {
 
     options {
         timestamps()
+        skipDefaultCheckout(true)
     }
 
     environment {
+        COMPOSE_PROJECT_NAME = 'shortener_ci'
         HEALTH_URL = 'http://host.docker.internal:8080/health'
     }
 
@@ -35,7 +37,7 @@ pipeline {
                         -v "$PWD":/app \
                         -w /app \
                         php:8.2-cli \
-                        sh -c 'find . -path ./.git -prune -o -name "*.php" -print0 | xargs -0 -n1 php -l'
+                        sh -lc 'find . -path "./.git" -prune -o -name "*.php" -print | while read file; do php -l "$file"; done'
                 '''
             }
         }
@@ -43,7 +45,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
-                    docker compose build
+                    docker compose -p shortener_ci build
                 '''
             }
         }
@@ -51,8 +53,9 @@ pipeline {
         stage('Docker Deploy') {
             steps {
                 sh '''
-                    docker compose down --remove-orphans || true
-                    docker compose up -d
+                    docker compose -p shortener_ci down || true
+                    docker compose -p shortener_ci up -d
+                    docker compose -p shortener_ci ps
                 '''
             }
         }
@@ -95,9 +98,9 @@ pipeline {
 
         failure {
             echo 'FAILED: El pipeline falló. Mostrando estado de contenedores...'
-            sh 'docker compose ps || true'
-            sh 'docker compose logs api --tail=80 || true'
-            sh 'docker compose logs db --tail=80 || true'
+            sh 'docker compose -p shortener_ci ps || true'
+            sh 'docker compose -p shortener_ci logs api --tail=80 || true'
+            sh 'docker compose -p shortener_ci logs db --tail=80 || true'
         }
     }
 }

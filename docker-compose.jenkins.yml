@@ -1,3 +1,5 @@
+name: shortener_jenkins_stack
+
 services:
   jenkins:
     build:
@@ -14,12 +16,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    networks:
-      - jenkins_network
 
 volumes:
   jenkins_home:
-
-networks:
-  jenkins_network:
-    driver: bridge
